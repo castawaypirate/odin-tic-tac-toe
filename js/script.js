@@ -35,7 +35,7 @@ function GameBoard() {
   }
 
   function placingMark(row, column, mark) {
-    if (!(mark === "X" || mark === "O")) {
+    if (!(mark === "x" || mark === "o")) {
       return "invalid input";
     }
 
@@ -126,41 +126,146 @@ function Player(name, mark) {
 
 function GameController(firstPlayerName, secondPlayerName) {
   const game = GameBoard();
-  const firstPlayer = Player(firstPlayerName, "X");
-  const secondPlayer = Player(secondPlayerName, "O");
 
-  function play() {
+  let playing;
+  let waiting;
+
+  let turns;
+
+  const initializeGame = () => {
     game.initializeBoard();
-    let playing = firstPlayer;
-    let waiting = secondPlayer;
-    let turns = 0;
-    do {
-      let message = playerTurn(playing);
-      while (message) {
-        alert(message);
-        message = playerTurn(playing);
-      }
+
+    const firstPlayer = Player(firstPlayerName, "x");
+    const secondPlayer = Player(secondPlayerName, "o");
+
+    playing = firstPlayer;
+    waiting = secondPlayer;
+    turns = 0;
+    initializeRematch();
+  };
+
+  const playersExist = () => {
+    return firstPlayer && secondPlayer;
+  };
+
+  function playerTurn(row, column) {
+    let message = game.placingMark(row, column, playing.getPlayerMark());
+    if (message) {
+      alert("no no, you can't do that - " + message);
+    } else {
+      let mark = playing.getPlayerMark();
       [playing, waiting] = [waiting, playing];
       turns++;
-      game.printBoard();
-    } while (!game.gameOver() && turns < 9);
-
-    if (turns === 9 && !game.gameOver()) {
-      console.log("tie");
-    } else {
-      console.log("winner: " + waiting.getPlayerName());
-      console.log("loser: " + playing.getPlayerName());
+      return mark;
     }
   }
 
-  function playerTurn(player) {
-    var row = prompt("row for " + player.getPlayerMark() + ": ");
-    var column = prompt("column for " + player.getPlayerMark() + ": ");
-    return game.placingMark(row, column, player.getPlayerMark());
+  function isGameOver() {
+    if (turns === 9 && !game.gameOver()) {
+      return "tie";
+    }
+    if (game.gameOver()) {
+      return waiting.getPlayerName();
+    }
+
+    return false;
   }
 
-  return { play };
+  return { initializeGame, playerTurn, isGameOver };
 }
 
-const newGame = GameController("one", "two");
-// newGame.play();
+function renderBoard() {
+  const container = document.querySelector(".container");
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      const button = document.createElement("button");
+      button.dataset.row = i;
+      button.dataset.column = j;
+      container.appendChild(button);
+    }
+  }
+}
+
+function placeMark(event) {
+  const button = event.target;
+  let row = button.dataset.row;
+  let column = button.dataset.column;
+  let mark = newGame.playerTurn(row, column);
+  if (mark) {
+    button.textContent = mark;
+  }
+
+  let result = newGame.isGameOver();
+  if (result) {
+    setTimeout(() => {
+      console.log(result);
+      if (result === "tie") {
+        confirm("it's a tie");
+      } else {
+        confirm("the winner is " + result);
+      }
+    }, 1);
+
+    const container = document.querySelector(".container");
+    const cells = container.querySelectorAll("button");
+    for (let cell of cells) {
+      cell.removeEventListener("click", placeMark);
+      cell.classList.remove("active-cell");
+    }
+  }
+}
+
+document.querySelector(".new-game").addEventListener("click", () => {
+  document.querySelector("#new-game-form").reset();
+  document.querySelector("dialog").showModal();
+});
+
+document.querySelector(".rematch").addEventListener("click", () => {});
+
+document
+  .querySelector("#new-game-form")
+  .addEventListener("submit", function (event) {
+    event.preventDefault();
+    const formData = new FormData(this);
+    newGame = GameController(
+      formData.get("player-one"),
+      formData.get("player-two"),
+    );
+
+    newGame.initializeGame();
+
+    const container = document.querySelector(".container");
+    const cells = container.querySelectorAll("button");
+    for (let cell of cells) {
+      cell.textContent = "";
+      cell.addEventListener("click", placeMark);
+      cell.classList.add("active-cell");
+    }
+    const dialog = document.querySelector("#new-game-dialog");
+    dialog.close();
+  });
+
+function initializeRematch() {
+  const rematch = document.querySelector(".rematch");
+  rematch.classList.remove("disabled-button");
+
+  rematch.addEventListener("click", resetBoardForRematch);
+}
+
+function resetBoardForRematch() {
+  newGame.initializeGame();
+
+  const container = document.querySelector(".container");
+  const cells = container.querySelectorAll("button");
+  for (let cell of cells) {
+    cell.textContent = "";
+    if (cell.getAttribute("listener") !== "true") {
+      cell.addEventListener("click", placeMark);
+      cell.classList.add("active-cell");
+    }
+  }
+}
+
+let newGame;
+
+renderBoard();

@@ -7,8 +7,44 @@
     <link href="css/style.css" rel="stylesheet" />
   </head>
   <body>
-    <h1>Tic Tac Toe</h1>
-    <p>Everything is in the console right now</p>
+    <dialog id="new-game-dialog">
+      <form id="new-game-form">
+        <div class="form-field">
+          <label for="player-one">Player One</label>
+          <input
+            type="text"
+            id="player-one"
+            name="player-one"
+            value=""
+            required
+          />
+        </div>
+        <div class="form-field">
+          <label for="player-two">Player Two</label>
+          <input
+            type="text"
+            id="player-two"
+            name="player-two"
+            value=""
+            required
+          />
+        </div>
+      </form>
+      <div class="form-buttons">
+        <button type="submit" id="start-button" form="new-game-form">
+          Start
+        </button>
+        <button commandfor="new-game-dialog" command="close">Close</button>
+      </div>
+    </dialog>
+    <div class="header">
+      <div class="page-title">Odin Tic Tac Toe</div>
+      <div class="action-buttons">
+        <button class="new-game">New Game</button>
+        <button class="rematch disabled-button">Rematch</button>
+      </div>
+    </div>
+    <div class="container"></div>
     <script src="js/script.js"></script>
   </body>
 </html>
